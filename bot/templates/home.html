@@ -1,0 +1,129 @@
+{% load static %}<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Entrar · ContabilidadPerson</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="{% static 'bot/css/chat.css' %}">
+
+<style>
+  .portada {
+    flex: 1 1 auto;
+    display: grid;
+    place-items: center;
+    padding: 2rem 1.5rem;
+  }
+
+  .acceso {
+    width: 100%;
+    max-width: 21rem;
+  }
+
+  .acceso-marca {
+    margin: 0 0 0.3rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  .acceso-texto {
+    margin: 0 0 2rem;
+    color: var(--papel-tenue);
+    font-size: 0.92rem;
+  }
+
+  .acceso-campo {
+    display: block;
+    margin-bottom: 1.25rem;
+  }
+
+  .acceso-campo span {
+    display: block;
+    margin-bottom: 0.3rem;
+    font-size: 0.82rem;
+    color: var(--papel-tenue);
+  }
+
+  .acceso-campo input {
+    width: 100%;
+    padding: 0.5rem 0 0.45rem;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--papel-tenue);
+    color: var(--papel);
+    font: inherit;
+    font-size: 1rem;
+  }
+
+  .acceso-campo input:focus {
+    outline: none;
+    border-bottom-color: var(--oro);
+  }
+
+  .acceso-entrar {
+    width: 100%;
+    margin-top: 0.5rem;
+    padding: 0.6rem;
+    background: var(--oro);
+    border: 0;
+    border-radius: var(--radio);
+    color: var(--tinta);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .acceso-entrar:hover { background: #F0C560; }
+
+  .acceso-error {
+    margin: 0 0 1.25rem;
+    padding-left: 0.7rem;
+    border-left: 2px solid var(--ladrillo);
+    font-size: 0.88rem;
+    color: var(--papel);
+  }
+</style>
+</head>
+
+<body>
+
+<main class="portada">
+  <div class="acceso">
+
+    <h1 class="acceso-marca">ContabilidadPerson</h1>
+    <p class="acceso-texto">Entra para ver tus cuentas y anotar movimientos.</p>
+
+    {% if form.errors %}
+      <p class="acceso-error">
+        Ese usuario y esa contraseña no coinciden. Revísalos y vuelve a intentar.
+      </p>
+    {% endif %}
+
+    <form method="post" autocomplete="on">
+      {% csrf_token %}
+
+      <label class="acceso-campo">
+        <span>Usuario</span>
+        <input type="text" name="username" autocomplete="username" autofocus required>
+      </label>
+
+      <label class="acceso-campo">
+        <span>Contraseña</span>
+        <input type="password" name="password" autocomplete="current-password" required>
+      </label>
+
+      <button type="submit" class="acceso-entrar">Entrar</button>
+
+      <input type="hidden" name="next" value="{{ next }}">
+    </form>
+
+  </div>
+</main>
+
+</body>
+</html>

@@ -1,0 +1,125 @@
+{% load static %}<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Libreta · ContabilidadPerson</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="{% static 'bot/css/chat.css' %}">
+</head>
+
+<body
+  data-send-url="{% url 'bot:chat_send' %}"
+  data-state="{{ state }}">
+
+{% csrf_token %}
+
+<header class="barra">
+  <a class="marca" href="/">ContabilidadPerson</a>
+
+  <p class="barra-saldo">
+    <span class="barra-saldo-etiqueta">Saldo total</span>
+    <b class="cifra" id="saldo-total">{{ total_balance }}</b>
+
+    <form class="barra-salir" method="post" action="{% url 'logout' %}">
+      {% csrf_token %}
+      <button type="submit">Salir</button>
+    </form>
+  </p>
+</header>
+
+<main class="libreta">
+
+  <!-- ─────────── cuentas ─────────── -->
+  <aside class="cuentas" aria-label="Tus cuentas">
+    <h2 class="cuentas-titulo">Cuentas</h2>
+
+    <div class="cuentas-tira" id="cuentas-tira" role="radiogroup" aria-label="Cuenta activa">
+      {% for cuenta in accounts %}
+        <button
+          type="button"
+          class="cuenta"
+          role="radio"
+          aria-checked="false"
+          data-id="{{ cuenta.id }}"
+          data-tono="{{ cuenta.tone }}">
+          <span class="cuenta-nombre">{{ cuenta.name }}</span>
+          <span class="cuenta-tipo">{{ cuenta.type_label }}</span>
+          <span class="cuenta-saldo cifra">{{ cuenta.balance_display }}</span>
+        </button>
+      {% empty %}
+        <p class="cuentas-vacio">
+          Todavía no tienes cuentas. Crea una en
+          <a href="/admin/finance/account/add/">el panel de administración</a>
+          y vuelve aquí.
+        </p>
+      {% endfor %}
+    </div>
+
+    <p class="cuentas-nota" id="cuenta-nota">
+      Elige una cuenta para que los movimientos entren ahí sin tener que nombrarla.
+    </p>
+  </aside>
+
+  <!-- ─────────── conversación ─────────── -->
+  <section class="conversacion">
+
+    <div class="hilo" id="hilo" role="log" aria-live="polite" aria-label="Conversación">
+      {% for mensaje in history %}
+        <article class="turno turno--{% if mensaje.role == 'USER' %}mio{% else %}bot{% endif %}">
+          <p class="turno-texto">{{ mensaje.content }}</p>
+        </article>
+      {% empty %}
+        <div class="arranque">
+          <p class="arranque-saludo">Hola, {{ request.user.username }}.</p>
+          <p class="arranque-texto">
+            Escribe los movimientos como se los contarías a alguien.
+            Yo los anoto, saco cuentas y te digo cómo vas.
+          </p>
+        </div>
+      {% endfor %}
+    </div>
+
+    <p class="espera" id="espera" {% if not state_hint %}hidden{% endif %}>
+      {{ state_hint }}
+      <button type="button" class="espera-cancelar" id="cancelar">Cancelar</button>
+    </p>
+
+    <div class="atajos" id="atajos">
+      {% for sugerencia in suggestions %}
+        <button type="button" class="atajo" data-texto="{{ sugerencia }}">{{ sugerencia }}</button>
+      {% endfor %}
+    </div>
+
+    <!-- el renglón de libreta -->
+    <form class="renglon" id="renglon" autocomplete="off">
+      <span class="renglon-fecha cifra" id="renglon-fecha"></span>
+
+      <label class="renglon-campo">
+        <span class="visually-hidden">Escribe tu movimiento o pregunta</span>
+        <input
+          type="text"
+          id="entrada"
+          name="texto"
+          placeholder="gasté 15mil en el taxi"
+          maxlength="500"
+          autofocus>
+      </label>
+
+      <span class="renglon-cuenta" id="renglon-cuenta"></span>
+
+      <button type="submit" class="renglon-anotar" id="anotar">Anotar</button>
+    </form>
+
+    <p class="renglon-error" id="error" hidden></p>
+  </section>
+</main>
+
+<script id="datos-cuentas" type="application/json">{{ accounts_json|safe }}</script>
+<script src="{% static 'bot/js/chat.js' %}"></script>
+</body>
+</html>

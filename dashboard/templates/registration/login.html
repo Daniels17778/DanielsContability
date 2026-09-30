@@ -1,0 +1,17 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Entrar{% endblock %}
+{% block content %}
+<main class="auth">
+  <form method="post">{% csrf_token %}
+    <h1>ContabilidadPerson</h1>
+    <p class="muted">Tus cuentas, en calma.</p>
+    {% if form.errors %}<p class="err">Usuario o contraseña incorrectos.</p>{% endif %}
+    <label for="id_username">Usuario</label>
+    <input type="text" name="username" id="id_username" autocomplete="username" autofocus required>
+    <label for="id_password">Contraseña</label>
+    <input type="password" name="password" id="id_password" autocomplete="current-password" required>
+    <input type="hidden" name="next" value="{{ next }}">
+    <button class="btn" type="submit">Entrar</button>
+  </form>
+</main>
+{% endblock %}

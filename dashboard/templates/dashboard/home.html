@@ -1,0 +1,80 @@
+{% extends "dashboard/base.html" %}
+{% block content %}
+<main class="wrap">
+  <div class="hero">
+    <p class="eyebrow">{{ today|date:"l j \d\e F" }} · Saldo total</p>
+    <span class="big num">${{ total_balance|floatformat:"0g" }}</span>
+    <p style="margin-top:18px"><a class="btn-p" style="display:inline-block;text-decoration:none;margin:0" href="{% url 'dashboard:transactions' %}?nuevo=1#nuevo">+ Nuevo movimiento</a></p>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><span class="muted">Ingresos del mes</span><span class="num">+${{ monthly_income|floatformat:"0g" }}</span></div>
+    <div class="stat"><span class="muted">Gastos del mes</span><span class="num">−${{ monthly_expenses|floatformat:"0g" }}</span></div>
+    <div class="stat"><span class="muted">Balance del mes</span><span class="num">{% if monthly_balance < 0 %}−{% endif %}${{ monthly_balance_abs|floatformat:"0g" }}</span></div>
+  </div>
+
+  <div class="grid">
+    <div>
+      <section>
+        <h2>Últimos movimientos <a href="{% url 'dashboard:transactions' %}">Ver todos</a></h2>
+        <table>
+          {% for tx in recent_transactions %}
+          <tr>
+            <td>{{ tx.date|date:"d M" }}</td>
+            <td>{% if tx.description %}{{ tx.description|truncatechars:38 }}{% elif tx.category %}{{ tx.category.name }}{% else %}{{ tx.get_type_display }}{% endif %}<br><small>{% if tx.category %}{{ tx.category.name }}{% else %}{{ tx.get_type_display }}{% endif %} · {{ tx.account.name }}</small></td>
+            <td class="amt num">{% if tx.type == 'INCOME' %}+{% elif tx.type == 'EXPENSE' %}−{% endif %}${{ tx.amount|floatformat:"0g" }}</td>
+          </tr>
+          {% empty %}<tr><td colspan="3" class="empty">Aún no hay movimientos. Cuéntaselo a la <a href="{% url 'dashboard:chat' %}">Libreta</a>.</td></tr>
+          {% endfor %}
+        </table>
+      </section>
+
+      <section>
+        <h2>Gastos por categoría <span>este mes</span></h2>
+        {% for c in expense_bars %}
+        <div class="cat"><div class="row"><span>{{ c.name }}</span><span class="num">${{ c.total|floatformat:"0g" }}</span></div>
+        <div class="bar"><i style="width:{{ c.pct }}%"></i></div></div>
+        {% empty %}<p class="empty">Sin gastos este mes.</p>{% endfor %}
+      </section>
+    </div>
+
+    <div>
+      <section>
+        <h2>Cuentas <a href="{% url 'dashboard:accounts' %}">Gestionar</a></h2>
+        {% for a in accounts %}
+        <div class="row"><span>{{ a.name }}<small>{{ a.get_account_type_display }}</small></span><span class="num">${{ a.balance|floatformat:"0g" }}</span></div>
+        {% empty %}<p class="empty">Crea tu primera cuenta en <a href="{% url 'dashboard:accounts' %}">administración</a>.</p>{% endfor %}
+      </section>
+
+      {% if savings_goals %}
+      <section>
+        <h2>Metas de ahorro <a href="{% url 'dashboard:plans' %}">Ver planes</a></h2>
+        {% for g in savings_goals %}
+        <div class="cat"><div class="row"><span>{{ g.name }}{% if g.deadline %}<small>hasta {{ g.deadline|date:"d M Y" }}</small>{% endif %}</span>
+        <span class="num">{{ g.progress|floatformat:"0" }}%</span></div>
+        <div class="bar"><i style="width:{{ g.progress|floatformat:'0' }}%"></i></div></div>
+        {% endfor %}
+      </section>
+      {% endif %}
+
+      {% if debts %}
+      <section>
+        <h2>Deudas <span class="num">${{ total_debt|floatformat:"0g" }}</span></h2>
+        {% for d in debts %}
+        <div class="row"><span>{{ d.name }}<small>{{ d.creditor|default:d.get_status_display }}{% if d.due_date %} · vence {{ d.due_date|date:"d M" }}{% endif %}</small></span><span class="num">${{ d.remaining|floatformat:"0g" }}</span></div>
+        {% endfor %}
+      </section>
+      {% endif %}
+
+      {% if reserved_funds %}
+      <section>
+        <h2>Reservado <span class="num">${{ total_reserved|floatformat:"0g" }}</span></h2>
+        {% for f in reserved_funds %}
+        <div class="row"><span>{{ f.name }}<small>{{ f.account.name }}</small></span><span class="num">${{ f.amount|floatformat:"0g" }}</span></div>
+        {% endfor %}
+      </section>
+      {% endif %}
+    </div>
+  </div>
+</main>
+{% endblock %}

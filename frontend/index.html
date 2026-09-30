@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ContabilidadPerson - Gestión Financiera Personal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Auth Pages -->
+        <div id="auth-page" class="page hidden">
+            <div class="auth-container">
+                <div class="auth-card">
+                    <div class="auth-header">
+                        <div class="logo">💰</div>
+                        <h1>ContabilidadPerson</h1>
+                        <p class="subtitle">Gestión financiera personal</p>
+                    </div>
+                    
+                    <!-- Login Form -->
+                    <form id="login-form" class="auth-form">
+                        <h2>Iniciar Sesión</h2>
+                        <div class="form-group">
+                            <label for="login-username">Usuario</label>
+                            <input type="text" id="login-username" name="username" required autocomplete="username">
+                        </div>
+                        <div class="form-group">
+                            <label for="login-password">Contraseña</label>
+                            <input type="password" id="login-password" name="password" required autocomplete="current-password">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">Entrar</button>
+                        <p class="auth-switch">¿No tienes cuenta? <button type="button" id="show-register">Regístrate</button></p>
+                    </form>
+
+                    <!-- Register Form -->
+                    <form id="register-form" class="auth-form hidden">
+                        <h2>Crear Cuenta</h2>
+                        <div class="form-group">
+                            <label for="register-username">Usuario</label>
+                            <input type="text" id="register-username" name="username" required minlength="3" autocomplete="username">
+                        </div>
+                        <div class="form-group">
+                            <label for="register-email">Email</label>
+                            <input type="email" id="register-email" name="email" required autocomplete="email">
+                        </div>
+                        <div class="form-group">
+                            <label for="register-password">Contraseña</label>
+                            <input type="password" id="register-password" name="password" required minlength="8" autocomplete="new-password">
+                        </div>
+                        <div class="form-group">
+                            <label for="register-password-confirm">Confirmar Contraseña</label>
+                            <input type="password" id="register-password-confirm" name="password_confirm" required autocomplete="new-password">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">Crear Cuenta</button>
+                        <p class="auth-switch">¿Ya tienes cuenta? <button type="button" id="show-login">Inicia sesión</button></p>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main App Layout -->
+        <div id="main-layout" class="page hidden">
+            <!-- Sidebar -->
+            <aside id="sidebar" class="sidebar">
+                <div class="sidebar-header">
+                    <div class="logo">💰</div>
+                    <h1>ContabilidadPerson</h1>
+                </div>
+                <nav class="sidebar-nav">
+                    <a href="#" data-page="dashboard" class="nav-item active">
+                        <span class="nav-icon">📊</span>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="#" data-page="transactions" class="nav-item">
+                        <span class="nav-icon">💳</span>
+                        <span>Transacciones</span>
+                        <span class="badge" id="transactions-badge">0</span>
+                    </a>
+                    <a href="#" data-page="accounts" class="nav-item">
+                        <span class="nav-icon">🏦</span>
+                        <span>Cuentas</span>
+                    </a>
+                    <a href="#" data-page="categories" class="nav-item">
+                        <span class="nav-icon">🏷️</span>
+                        <span>Categorías</span>
+                    </a>
+                    <a href="#" data-page="budgets" class="nav-item">
+                        <span class="nav-icon">📋</span>
+                        <span>Presupuestos</span>
+                    </a>
+                    <a href="#" data-page="goals" class="nav-item">
+                        <span class="nav-icon">🎯</span>
+                        <span>Metas de Ahorro</span>
+                    </a>
+                    <a href="#" data-page="debts" class="nav-item">
+                        <span class="nav-icon">💸</span>
+                        <span>Deudas</span>
+                    </a>
+                    <a href="#" data-page="reserved" class="nav-item">
+                        <span class="nav-icon">🏦</span>
+                        <span>Fondos Reservados</span>
+                    </a>
+                    <a href="#" data-page="reports" class="nav-item">
+                        <span class="nav-icon">📈</span>
+                        <span>Reportes</span>
+                    </a>
+                </nav>
+                <div class="sidebar-footer">
+                    <div class="user-info">
+                        <span id="sidebar-username"></span>
+                    </div>
+                    <button id="logout-btn" class="btn btn-danger btn-block">Cerrar Sesión</button>
+                </div>
+            </aside>
+
+            <!-- Mobile sidebar overlay -->
+            <div id="sidebar-overlay" class="sidebar-overlay hidden"></div>
+
+            <!-- Main Content -->
+            <main id="main-content" class="main-content">
+                <!-- Top Bar -->
+                <header class="top-bar">
+                    <button id="menu-toggle" class="menu-toggle" aria-label="Menú">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                    <h1 id="page-title">Dashboard</h1>
+                    <div class="top-bar-actions">
+                        <button id="quick-add-btn" class="btn btn-primary" data-modal="transaction-modal">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                            <span>Nuevo</span>
+                        </button>
+                    </div>
+                </header>
+
+                <!-- Page Content -->
+                <div id="page-content" class="page-content">
+                    <!-- Pages will be injected here -->
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-container"></div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Templates -->
+    <template id="transaction-modal-template">
+        <div class="modal-overlay" data-modal="transaction-modal">
+            <div class="modal">
+                <div class="modal-header">
+                    <h2 id="transaction-modal-title">Nueva Transacción</h2>
+                    <button class="modal-close" aria-label="Cerrar">&times;</button>
+                </div>
+                <form id="transaction-form" class="modal-body">
+                    <input type="hidden" id="transaction-id" name="id">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Tipo</label>
+                            <select id="transaction-type" name="type" required>
+                                <option value="EXPENSE">💸 Gasto</option>
+                                <option value="INCOME">💰 Ingreso</option>
+                                <option value="TRANSFER">🔄 Transferencia</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Monto *</label>
+                            <input type="number" id="transaction-amount" name="amount" step="0.01" min="0.01" required placeholder="0.00">
+                        </div>
+                        <div class="form-group" id="transaction-currency-group">
+                            <label>Moneda</label>
+                            <select id="transaction-currency" name="currency">
+                                <option value="COP">COP ($)</option>
+                                <option value="USD">USD ($)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row" id="transaction-category-group">
+                        <div class="form-group">
+                            <label>Categoría *</label>
+                            <select id="transaction-category" name="category_id" required>
+                                <option value="">Seleccionar...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row" id="transaction-account-group">
+                        <div class="form-group">
+                            <label>Cuenta *</label>
+                            <select id="transaction-account" name="account_id" required>
+                                <option value="">Seleccionar...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row hidden" id="transaction-transfer-group">
+                        <div class="form-group">
+                            <label>Cuenta Destino *</label>
+                            <select id="transaction-transfer-account" name="transfer_account_id">
+                                <option value="">Seleccionar...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Fecha *</label>
+                            <input type="date" id="transaction-date" name="date" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label>Descripción</label>
+                            <textarea id="transaction-description" name="description" rows="3" placeholder="Opcional"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary modal-close">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </template>
+
+    <template id="account-modal-template">
+        <div class="modal-overlay" data-modal="account-modal">
+            <div class="modal">
+                <div class="modal-header">
+                    <h2 id="account-modal-title">Nueva Cuenta</h2>
+                    <button class="modal-close" aria-label="Cerrar">&times;</button>
+                </div>
+                <form id="account-form" class="modal-body">
+                    <input type="hidden" id="account-id" name="id">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nombre *</label>
+                            <input type="text" id="account-name" name="name" required placeholder="Ej: Nequi, Bancolombia, Efectivo">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Tipo *</label>
+                            <select id="account-type" name="account_type" required>
+                                <option value="CASH">💵 Efectivo</option>
+                                <option value="BANK">🏦 Cuenta Bancaria</option>
+                                <option value="NEQUI">📱 Nequi</option>
+                                <option value="DIGITAL">💳 Billetera Digital</option>
+                                <option value="OTHER">📦 Otro</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Saldo Inicial</label>
+                            <input type="number" id="account-balance" name="balance" step="0.01" value="0" placeholder="0.00">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="account-active" name="is_active" checked> Activa
+                            </label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary modal-close">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </template>
+
+    <template id="category-modal-template">
+        <div class="modal-overlay" data-modal="category-modal">
+            <div class="modal">
+                <div class="modal-header">
+                    <h2 id="category-modal-title">Nueva Categoría</h2>
+                    <button class="modal-close" aria-label="Cerrar">&times;</button>
+                </div>
+                <form id="category-form" class="modal-body">
+                    <input type="hidden" id="category-id" name="id">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nombre *</label>
+                            <input type="text" id="category-name" name="name" required placeholder="Ej: Comida, Transporte, Salario">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Tipo *</label>
+                            <select id="category-type" name="type" required>
+                                <option value="EXPENSE">💸 Gasto</option>
+                                <option value="INCOME">💰 Ingreso</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Icono</label>
+                            <input type="text" id="category-icon" name="icon" maxlength="2" placeholder="🍕">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="category-active" name="is_active" checked> Activa
+                            </label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary modal-close">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </template>
+
+    <template id="budget-modal-template">
+        <div class="modal-overlay" data-modal="budget-modal">
+            <div class="modal">
+                <div class="modal-header">
+                    <h2 id="budget-modal-title">Nuevo Presupuesto</h2>
+                    <button class="modal-close" aria-label="Cerrar">&times;</button>
+                </div>
+                <form id="budget-form" class="modal-body">
+                    <input type="hidden" id="budget-id" name="id">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Categoría *</label>
+                            <select id="budget-category" name="category_id" required>
+                                <option value="">Seleccionar...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Límite Mensual *</label>
+                            <input type="number" id="budget-limit" name="limit_amount" step="0.01" min="0.01" required placeholder="0.00">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Mes *</label>
+                            <input type="month" id="budget-month" name="month" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary modal-close">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </template>
+
+    <template id="goal-modal-template">
+        <div class="modal-overlay" data-modal="goal-modal">
+            <div class="modal">
+                <div class="modal-header">
+                    <h2 id="goal-modal-title">Meta de Ahorro</h2>
+                    <button class="modal-close" aria-label="Cerrar">&times;</button>
+                </div>
+                <form id="goal-form" class="modal-body">
+                    <input type="hidden" id="goal-id" name="id">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nombre *</label>
+                            <input type="text" id="goal-name" name="name" required placeholder="Ej: Viaje, Emergencia, Auto">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Monto Objetivo *</label>
+                            <input type="number" id="goal-target" name="target_amount" step="0.01" min="0.01" required placeholder="0.00">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Monto Actual</label>
+                            <input type="number" id="goal-current" name="current_amount" step="0.01" value="0" placeholder="0.00">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Fecha Límite</label>
+                            <input type="date" id="goal-deadline" name="deadline">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary modal-close">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </template>
+
+    <template id="debt-modal-template">
+        <div class="modal-overlay" data-modal="debt-modal">
+            <div class="modal">
+                <div class="modal-header">
+                    <h2 id="debt-modal-title">Deuda</h2>
+                    <button class="modal-close" aria-label="Cerrar">&times;</button>
+                </div>
+                <form id="debt-form" class="modal-body">
+                    <input type="hidden" id="debt-id" name="id">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nombre *</label>
+                            <input type="text" id="debt-name" name="name" required placeholder="Ej: Préstamo, Tarjeta, Familiar">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Acreedor</label>
+                            <input type="text" id="debt-creditor" name="creditor" placeholder="Ej: Banco, Juan Pérez">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Monto Total *</label>
+                            <input type="number" id="debt-total" name="total_amount" step="0.01" min="0.01" required placeholder="0.00">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Monto Pagado</label>
+                            <input type="number" id="debt-paid" name="paid_amount" step="0.01" value="0" placeholder="0.00">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Fecha de Vencimiento</label>
+                            <input type="date" id="debt-due" name="due_date">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Estado</label>
+                            <select id="debt-status" name="status">
+                                <option value="PENDING">⏳ Pendiente</option>
+                                <option value="PARTIAL">💸 Pago Parcial</option>
+                                <option value="PAID">✅ Pagada</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary modal-close">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </template>
+
+    <template id="reserved-modal-template">
+        <div class="modal-overlay" data-modal="reserved-modal">
+            <div class="modal">
+                <div class="modal-header">
+                    <h2 id="reserved-modal-title">Fondo Reservado</h2>
+                    <button class="modal-close" aria-label="Cerrar">&times;</button>
+                </div>
+                <form id="reserved-form" class="modal-body">
+                    <input type="hidden" id="reserved-id" name="id">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nombre *</label>
+                            <input type="text" id="reserved-name" name="name" required placeholder="Ej: Impuestos, Seguro, Vacaciones">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Cuenta *</label>
+                            <select id="reserved-account" name="account_id" required>
+                                <option value="">Seleccionar...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Monto *</label>
+                            <input type="number" id="reserved-amount" name="amount" step="0.01" min="0.01" required placeholder="0.00">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Propósito</label>
+                            <input type="text" id="reserved-purpose" name="purpose" placeholder="Para qué se reserva">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Fecha Límite</label>
+                            <input type="date" id="reserved-deadline" name="deadline">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="reserved-completed" name="is_completed"> Completado
+                            </label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary modal-close">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </template>
+
+    <template id="confirm-modal-template">
+        <div class="modal-overlay" data-modal="confirm-modal">
+            <div class="modal modal-sm">
+                <div class="modal-header">
+                    <h2 id="confirm-title">Confirmar</h2>
+                </div>
+                <div class="modal-body">
+                    <p id="confirm-message"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="confirm-cancel">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="confirm-ok">Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>

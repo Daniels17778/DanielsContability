@@ -1,0 +1,46 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Cuentas{% endblock %}
+{% block content %}
+<main class="wrap">
+  <div class="page-head"><div><h1>Cuentas</h1><p class="muted">Los lugares donde tienes tu plata: efectivo, banco, Nequi…</p></div></div>
+  <div class="hero" style="padding-top:8px"><p class="eyebrow">Total en cuentas</p><span class="big num" style="font-size:44px">${{ total|floatformat:"0g" }}</span></div>
+
+  <details class="add" {% if not accounts %}open{% endif %} style="margin-top:28px">
+    <summary>+ Nueva cuenta</summary>
+    <form method="post" class="form">{% csrf_token %}<input type="hidden" name="action" value="create">
+      <div class="f2">
+        <div><label for="a-name">Nombre</label><input id="a-name" name="name" maxlength="100" placeholder="Ej: Bancolombia" required></div>
+        <div><label for="a-type">Tipo</label><select id="a-type" name="account_type">{% for v, l in types %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select></div>
+      </div>
+      <label for="a-bal">¿Cuánto tienes ahora en ella?</label>
+      <input id="a-bal" name="balance" data-money inputmode="numeric" placeholder="0">
+      <button class="btn-p" type="submit">Crear cuenta</button>
+    </form>
+  </details>
+
+  {% for a in accounts %}
+  <details class="item">
+    <summary><span>{{ a.name }}<small>{{ a.get_account_type_display }}</small></span><span class="num">${{ a.balance|floatformat:"0g" }}</span></summary>
+    <div class="edit">
+      <form method="post" class="form">{% csrf_token %}<input type="hidden" name="action" value="edit"><input type="hidden" name="id" value="{{ a.id }}">
+        <div class="f2">
+          <div><label>Nombre</label><input name="name" value="{{ a.name }}" maxlength="100" required></div>
+          <div><label>Tipo</label><select name="account_type">{% for v, l in types %}<option value="{{ v }}"{% if v == a.account_type %} selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+        </div>
+        <label>Saldo actual <span class="muted">(corrígelo si no coincide con la realidad)</span></label>
+        <input name="balance" data-money inputmode="numeric" value="{{ a.balance|floatformat:'0' }}">
+        <div class="btns"><button class="btn-p" type="submit">Guardar cambios</button></div>
+      </form>
+      <form method="post" data-confirm="¿Archivar esta cuenta? Sus movimientos se conservan.">{% csrf_token %}<input type="hidden" name="action" value="toggle"><input type="hidden" name="id" value="{{ a.id }}"><button class="btn-g" type="submit">Archivar cuenta</button></form>
+    </div>
+  </details>
+  {% empty %}<p class="empty">Aún no tienes cuentas activas.</p>{% endfor %}
+
+  {% if archived %}
+  <h2 style="margin-top:40px">Archivadas</h2>
+  {% for a in archived %}
+  <div class="item flat"><span>{{ a.name }}<small>{{ a.get_account_type_display }}</small></span>
+    <form method="post">{% csrf_token %}<input type="hidden" name="action" value="toggle"><input type="hidden" name="id" value="{{ a.id }}"><button class="btn-g" type="submit">Reactivar</button></form></div>
+  {% endfor %}{% endif %}
+</main>
+{% endblock %}

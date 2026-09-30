@@ -1,0 +1,10 @@
+<details class="item">
+  <summary><span>{{ c.icon }} {{ c.name }}</span>{% if c.month_total %}<span class="num muted">${{ c.month_total|floatformat:"0g" }}</span>{% endif %}</summary>
+  <div class="edit">
+    <form method="post" class="form">{% csrf_token %}<input type="hidden" name="action" value="edit"><input type="hidden" name="id" value="{{ c.id }}">
+      <div class="f2"><div><label>Nombre</label><input name="name" value="{{ c.name }}" maxlength="100" required></div><div><label>Emoji</label><input name="icon" value="{{ c.icon }}" maxlength="4"></div></div>
+      <div class="btns"><button class="btn-p" type="submit">Guardar</button></div>
+    </form>
+    <form method="post" data-confirm="¿Archivar «{{ c.name }}»? Sus movimientos se conservan.">{% csrf_token %}<input type="hidden" name="action" value="toggle"><input type="hidden" name="id" value="{{ c.id }}"><button class="btn-g" type="submit">Archivar</button></form>
+  </div>
+</details>

@@ -1,0 +1,6 @@
+Django>=5.0,<6.0
+whitenoise>=6.0
+dj-database-url>=2.0
+gunicorn>=21.0
+django-ratelimit>=4.0
+python-dotenv>=1.0

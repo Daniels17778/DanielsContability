@@ -1,0 +1,85 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Planes{% endblock %}
+{% block content %}
+<main class="wrap">
+  <div class="page-head"><div><h1>Planes</h1><p class="muted">Ahorrar, pagar lo que debes y no pasarte de lo presupuestado.</p></div></div>
+
+  <div class="grid">
+  <div>
+    <section>
+      <h2>Metas de ahorro</h2>
+      <details class="add"><summary>+ Nueva meta</summary>
+        <form method="post" class="form">{% csrf_token %}<input type="hidden" name="action" value="goal_create">
+          <label>¿Para qué estás ahorrando?</label><input name="name" maxlength="100" placeholder="Ej: Viaje a Cartagena" required>
+          <div class="f2"><div><label>Meta</label><input name="target" data-money inputmode="numeric" placeholder="3.000.000" required></div>
+          <div><label>Fecha límite <span class="muted">(opcional)</span></label><input type="date" name="deadline"></div></div>
+          <button class="btn-p" type="submit">Crear meta</button></form></details>
+      {% for g in goals %}
+      <details class="item"><summary><span>{{ g.name }}<small>${{ g.current_amount|floatformat:"0g" }} de ${{ g.target_amount|floatformat:"0g" }}{% if g.deadline %} · hasta {{ g.deadline|date:"d M Y" }}{% endif %}</small></span><span class="num">{{ g.pct }}%</span></summary>
+        <div class="bar"><i style="width:{{ g.pct }}%"></i></div>
+        <div class="edit"><p class="muted">Te faltan ${{ g.left|floatformat:"0g" }}.</p>
+          <form method="post" class="inline">{% csrf_token %}<input type="hidden" name="action" value="goal_add"><input type="hidden" name="id" value="{{ g.id }}">
+            <input name="amount" data-money inputmode="numeric" placeholder="Monto a aportar" required><button class="btn-p" type="submit">Aportar</button></form>
+          <form method="post" data-confirm="¿Eliminar esta meta?">{% csrf_token %}<input type="hidden" name="action" value="goal_delete"><input type="hidden" name="id" value="{{ g.id }}"><button class="btn-d" type="submit">Eliminar meta</button></form></div>
+      </details>
+      {% empty %}<p class="empty">No tienes metas activas.</p>{% endfor %}
+    </section>
+
+    <section>
+      <h2>Deudas <span class="num">${{ total_debt|floatformat:"0g" }}</span></h2>
+      <details class="add"><summary>+ Nueva deuda</summary>
+        <form method="post" class="form">{% csrf_token %}<input type="hidden" name="action" value="debt_create">
+          <div class="f2"><div><label>¿Qué debes?</label><input name="name" maxlength="100" placeholder="Ej: Préstamo moto" required></div>
+          <div><label>¿A quién? <span class="muted">(opcional)</span></label><input name="creditor" maxlength="100"></div></div>
+          <div class="f2"><div><label>Total</label><input name="total" data-money inputmode="numeric" required></div>
+          <div><label>Vence <span class="muted">(opcional)</span></label><input type="date" name="due_date"></div></div>
+          <button class="btn-p" type="submit">Registrar deuda</button></form></details>
+      {% for d in debts %}
+      <details class="item"><summary><span>{{ d.name }}<small>{{ d.creditor|default:"Sin acreedor" }}{% if d.due_date %} · vence {{ d.due_date|date:"d M Y" }}{% endif %}</small></span><span class="num">${{ d.remaining|floatformat:"0g" }}</span></summary>
+        <div class="bar"><i style="width:{{ d.pct }}%"></i></div>
+        <div class="edit"><p class="muted">Llevas pagado ${{ d.paid_amount|floatformat:"0g" }} de ${{ d.total_amount|floatformat:"0g" }}.</p>
+          <form method="post" class="inline">{% csrf_token %}<input type="hidden" name="action" value="debt_pay"><input type="hidden" name="id" value="{{ d.id }}">
+            <input name="amount" data-money inputmode="numeric" placeholder="Monto del pago" required><button class="btn-p" type="submit">Registrar pago</button></form>
+          <form method="post" data-confirm="¿Eliminar esta deuda?">{% csrf_token %}<input type="hidden" name="action" value="debt_delete"><input type="hidden" name="id" value="{{ d.id }}"><button class="btn-d" type="submit">Eliminar deuda</button></form></div>
+      </details>
+      {% empty %}<p class="empty">No tienes deudas pendientes.</p>{% endfor %}
+    </section>
+  </div>
+
+  <div>
+    <section>
+      <h2>Presupuesto <span>{{ month_date|date:"F" }}</span></h2>
+      <details class="add"><summary>+ Poner un límite</summary>
+        <form method="post" class="form">{% csrf_token %}<input type="hidden" name="action" value="budget_set">
+          <p class="muted" style="margin-top:14px">El máximo que quieres gastar este mes en una categoría.</p>
+          <div class="f2"><div><label>Categoría</label><select name="category">{% for c in expense_categories %}<option value="{{ c.id }}">{{ c.icon }} {{ c.name }}</option>{% endfor %}</select></div>
+          <div><label>Límite</label><input name="limit" data-money inputmode="numeric" required></div></div>
+          <button class="btn-p" type="submit">Guardar límite</button></form></details>
+      {% for b in budgets %}
+      <details class="item"><summary><span>{{ b.category.icon }} {{ b.category.name }}<small>${{ b.spent|floatformat:"0g" }} de ${{ b.limit_amount|floatformat:"0g" }}</small></span><span class="num">{% if b.over %}pasado ${{ b.left|floatformat:"0g" }}{% else %}quedan ${{ b.left|floatformat:"0g" }}{% endif %}</span></summary>
+        <div class="bar{% if b.over %} over{% endif %}"><i style="width:{{ b.pct }}%"></i></div>
+        <div class="edit"><form method="post" data-confirm="¿Quitar este presupuesto?">{% csrf_token %}<input type="hidden" name="action" value="budget_delete"><input type="hidden" name="id" value="{{ b.id }}"><button class="btn-d" type="submit">Quitar presupuesto</button></form></div>
+      </details>
+      {% empty %}<p class="empty">Sin límites este mes.</p>{% endfor %}
+    </section>
+
+    <section>
+      <h2>Dinero reservado <span class="num">${{ total_reserved|floatformat:"0g" }}</span></h2>
+      <p class="muted" style="margin:-4px 0 14px">Plata apartada para algo concreto. Sale del saldo de la cuenta hasta que la liberes.</p>
+      <details class="add"><summary>+ Reservar dinero</summary>
+        <form method="post" class="form">{% csrf_token %}<input type="hidden" name="action" value="fund_create">
+          <div class="f2"><div><label>Nombre</label><input name="name" maxlength="100" placeholder="Ej: Arriendo de octubre" required></div>
+          <div><label>Monto</label><input name="amount" data-money inputmode="numeric" required></div></div>
+          <div class="f2"><div><label>De qué cuenta</label><select name="account">{% for a in accounts %}<option value="{{ a.id }}">{{ a.name }} · ${{ a.balance|floatformat:"0g" }}</option>{% endfor %}</select></div>
+          <div><label>Para el <span class="muted">(opcional)</span></label><input type="date" name="deadline"></div></div>
+          <button class="btn-p" type="submit">Reservar</button></form></details>
+      {% for f in funds %}
+      <details class="item"><summary><span>{{ f.name }}<small>{{ f.account.name }}{% if f.deadline %} · para el {{ f.deadline|date:"d M" }}{% endif %}</small></span><span class="num">${{ f.amount|floatformat:"0g" }}</span></summary>
+        <div class="edit"><form method="post" data-confirm="¿Liberar este dinero? Vuelve al saldo de {{ f.account.name }}.">{% csrf_token %}<input type="hidden" name="action" value="fund_release"><input type="hidden" name="id" value="{{ f.id }}"><button class="btn-g" type="submit">Liberar y devolver a la cuenta</button></form></div>
+      </details>
+      {% empty %}<p class="empty">No hay dinero reservado.</p>{% endfor %}
+    </section>
+  </div>
+  </div>
+</main>
+{% endblock %}

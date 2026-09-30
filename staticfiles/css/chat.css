@@ -1,0 +1,496 @@
+/* ==========================================================
+   ContabilidadPerson · libreta
+   Verdigris profundo + papel. El color codifica el tipo de
+   movimiento, no decora. Las cifras van en mono tabular para
+   que alineen en columna como en una libreta de verdad.
+   ========================================================== */
+
+:root {
+  --tinta:        #0E2422;
+  --tinta-alta:   #173230;
+  --tinta-borde:  #24433F;
+  --papel:        #E8E3D3;
+  --papel-tenue:  #9BAAA3;
+
+  --verde:        #4FB286;   /* ingresos */
+  --ladrillo:     #C8492F;   /* gastos */
+  --oro:          #E3B23C;   /* saldos y transferencias */
+
+  --renglon-alto: 3.75rem;
+  --radio:        3px;
+
+  --ui:    "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
+  --cifra: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--tinta);
+  color: var(--papel);
+  font-family: var(--ui);
+  font-size: 16px;
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+}
+
+.cifra {
+  font-family: var(--cifra);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  letter-spacing: -0.01em;
+}
+
+.cifra::before { content: "$"; opacity: 0.45; }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0);
+  white-space: nowrap; border: 0;
+}
+
+:focus-visible {
+  outline: 2px solid var(--oro);
+  outline-offset: 2px;
+}
+
+/* ─────────────── barra superior ─────────────── */
+
+.barra {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 0.9rem 1.75rem;
+  border-bottom: 1px solid var(--tinta-borde);
+}
+
+.marca {
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--papel);
+  text-decoration: none;
+}
+
+.marca:hover { color: var(--oro); }
+
+.barra-saldo {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
+.barra-saldo-etiqueta {
+  font-size: 0.8rem;
+  color: var(--papel-tenue);
+}
+
+#saldo-total {
+  font-size: 1.15rem;
+  font-weight: 500;
+  color: var(--oro);
+}
+
+.barra-salir {
+  margin: 0;
+  padding-left: 0.9rem;
+  border-left: 1px solid var(--tinta-borde);
+}
+
+.barra-salir button {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  color: var(--papel-tenue);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.barra-salir button:hover { color: var(--papel); }
+
+/* ─────────────── estructura ─────────────── */
+
+.libreta {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 17rem minmax(0, 1fr);
+}
+
+/* ─────────────── cuentas ─────────────── */
+
+.cuentas {
+  border-right: 1px solid var(--tinta-borde);
+  padding: 1.4rem 1.25rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.cuentas-titulo {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--papel-tenue);
+}
+
+.cuentas-tira {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+/* ficha de cuenta: la banda de color a la izquierda dice el tipo */
+.cuenta {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "nombre saldo"
+    "tipo   saldo";
+  gap: 0 0.75rem;
+  align-items: center;
+  width: 100%;
+  padding: 0.6rem 0.75rem 0.6rem 1rem;
+  background: transparent;
+  border: 1px solid var(--tinta-borde);
+  border-left-width: 3px;
+  border-left-color: var(--tono, var(--papel-tenue));
+  border-radius: var(--radio);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.cuenta[data-tono="efectivo"] { --tono: var(--verde); }
+.cuenta[data-tono="nequi"]    { --tono: #B36FD9; }
+.cuenta[data-tono="banco"]    { --tono: var(--oro); }
+.cuenta[data-tono="digital"]  { --tono: #4F9FD9; }
+.cuenta[data-tono="otro"]     { --tono: var(--papel-tenue); }
+
+.cuenta:hover { background: var(--tinta-alta); }
+
+.cuenta[aria-checked="true"] {
+  background: var(--tinta-alta);
+  border-color: var(--tinta-borde);
+  border-left-color: var(--tono);
+  box-shadow: inset 0 0 0 1px var(--tono);
+}
+
+.cuenta-nombre {
+  grid-area: nombre;
+  font-weight: 500;
+  font-size: 0.92rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cuenta-tipo {
+  grid-area: tipo;
+  font-size: 0.74rem;
+  color: var(--papel-tenue);
+}
+
+.cuenta-saldo {
+  grid-area: saldo;
+  font-size: 0.86rem;
+  color: var(--papel);
+}
+
+.cuentas-vacio,
+.cuentas-nota {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--papel-tenue);
+}
+
+.cuentas-vacio a,
+.cuentas-nota a { color: var(--oro); }
+
+/* ─────────────── conversación ─────────────── */
+
+.conversacion {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.hilo {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 1.75rem clamp(1rem, 5vw, 3rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  scroll-behavior: smooth;
+}
+
+.arranque {
+  margin: auto 0;
+  max-width: 34rem;
+}
+
+.arranque-saludo {
+  margin: 0 0 0.35rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.arranque-texto {
+  margin: 0;
+  color: var(--papel-tenue);
+  max-width: 44ch;
+}
+
+.turno {
+  max-width: min(46ch, 82%);
+  padding: 0.6rem 0.85rem;
+  border-radius: var(--radio);
+  animation: entra 0.18s ease-out;
+}
+
+.turno-texto {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.turno--mio {
+  align-self: flex-end;
+  background: var(--tinta-alta);
+  border: 1px solid var(--tinta-borde);
+}
+
+/* respuesta del bot: filete a la izquierda, teñido por lo que reporta */
+.turno--bot {
+  align-self: flex-start;
+  padding-left: 0.85rem;
+  border-left: 2px solid var(--filete, var(--tinta-borde));
+}
+
+.turno--bot[data-filete="gasto"]        { --filete: var(--ladrillo); }
+.turno--bot[data-filete="ingreso"]      { --filete: var(--verde); }
+.turno--bot[data-filete="transferencia"]{ --filete: var(--oro); }
+.turno--bot[data-filete="pregunta"]     { --filete: var(--papel-tenue); }
+
+.turno--pensando .turno-texto {
+  color: var(--papel-tenue);
+  font-style: italic;
+}
+
+@keyframes entra {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ─────────────── estado de espera ─────────────── */
+
+.espera {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0.5rem clamp(1rem, 5vw, 3rem);
+  font-size: 0.82rem;
+  color: var(--oro);
+  border-top: 1px solid var(--tinta-borde);
+}
+
+.espera[hidden] { display: none; }
+
+.espera-cancelar {
+  padding: 0.15rem 0.5rem;
+  background: transparent;
+  border: 1px solid currentColor;
+  border-radius: var(--radio);
+  color: inherit;
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.espera-cancelar:hover { background: var(--tinta-alta); }
+
+/* ─────────────── atajos ─────────────── */
+
+.atajos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.75rem clamp(1rem, 5vw, 3rem) 0;
+}
+
+.atajo {
+  padding: 0.3rem 0.65rem;
+  background: transparent;
+  border: 1px dashed var(--tinta-borde);
+  border-radius: var(--radio);
+  color: var(--papel-tenue);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.atajo:hover {
+  color: var(--papel);
+  border-style: solid;
+  border-color: var(--papel-tenue);
+}
+
+/* ─────────────── el renglón ─────────────── */
+
+.renglon {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: stretch;
+  gap: 0;
+  min-height: var(--renglon-alto);
+  margin: 0.75rem clamp(1rem, 5vw, 3rem) 1.25rem;
+  border-bottom: 1px solid var(--papel-tenue);
+}
+
+.renglon:focus-within { border-bottom-color: var(--oro); }
+
+.renglon-fecha {
+  display: flex;
+  align-items: center;
+  padding-right: 0.9rem;
+  margin-right: 0.9rem;
+  border-right: 1px solid var(--tinta-borde);
+  font-size: 0.8rem;
+  color: var(--papel-tenue);
+  white-space: nowrap;
+}
+
+.renglon-fecha::before { content: none; }
+
+.renglon-campo {
+  display: flex;
+  min-width: 0;
+}
+
+.renglon-campo input {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  color: var(--papel);
+  font: inherit;
+  font-size: 1.02rem;
+}
+
+.renglon-campo input::placeholder { color: var(--papel-tenue); opacity: 0.7; }
+.renglon-campo input:focus { outline: none; }
+
+.renglon-cuenta {
+  display: flex;
+  align-items: center;
+  padding: 0 0.9rem;
+  font-size: 0.8rem;
+  color: var(--papel-tenue);
+  white-space: nowrap;
+}
+
+.renglon-anotar {
+  align-self: center;
+  padding: 0.45rem 1.1rem;
+  background: var(--oro);
+  border: 0;
+  border-radius: var(--radio);
+  color: var(--tinta);
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.renglon-anotar:hover { background: #F0C560; }
+
+.renglon-anotar[disabled] {
+  background: var(--tinta-borde);
+  color: var(--papel-tenue);
+  cursor: not-allowed;
+}
+
+.renglon-error {
+  margin: -0.6rem clamp(1rem, 5vw, 3rem) 1rem;
+  font-size: 0.85rem;
+  color: var(--ladrillo);
+}
+
+.renglon-error[hidden] { display: none; }
+
+/* ─────────────── móvil ─────────────── */
+
+@media (max-width: 760px) {
+  .libreta {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .cuentas {
+    border-right: 0;
+    border-bottom: 1px solid var(--tinta-borde);
+    padding: 0.85rem 1rem;
+    gap: 0.6rem;
+  }
+
+  .cuentas-titulo,
+  .cuentas-nota { display: none; }
+
+  .cuentas-tira {
+    flex-direction: row;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+    scrollbar-width: none;
+  }
+
+  .cuentas-tira::-webkit-scrollbar { display: none; }
+
+  .cuenta {
+    width: auto;
+    flex: 0 0 auto;
+    grid-template-areas: "nombre saldo" "tipo saldo";
+  }
+
+  .turno { max-width: 90%; }
+
+  .renglon {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    row-gap: 0.4rem;
+    padding-top: 0.5rem;
+  }
+
+  .renglon-fecha {
+    grid-column: 1 / -1;
+    padding: 0;
+    margin: 0;
+    border-right: 0;
+  }
+
+  .renglon-cuenta { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; scroll-behavior: auto !important; }
+}

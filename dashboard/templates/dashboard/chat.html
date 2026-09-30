@@ -1,0 +1,25 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Libreta{% endblock %}
+{% block content %}
+<main class="chat" data-url="{% url 'dashboard:chat_send' %}">
+  <div class="accs" id="accs" role="group" aria-label="Cuenta activa">
+    {% for a in accounts %}<button type="button" class="acc" aria-pressed="false" data-id="{{ a.id }}">{{ a.name }}<small class="num">${{ a.balance|floatformat:"0g" }}</small></button>{% endfor %}
+  </div>
+
+  <div class="thread" id="thread" role="log" aria-live="polite">
+    {% for m in history %}<div class="msg {% if m.role == 'USER' %}me{% else %}bot{% endif %}">{{ m.content }}</div>
+    {% empty %}<div class="hello" id="hello"><b>Hola, {{ request.user.username }}.</b>Escribe tus movimientos como se los contarías a alguien. Yo los anoto y hago las cuentas.</div>{% endfor %}
+  </div>
+
+  <div class="tips" id="tips">
+    {% for t in suggestions %}<button type="button" class="tip">{{ t }}</button>{% endfor %}
+  </div>
+
+  <form class="compose" id="compose" autocomplete="off">{% csrf_token %}
+    <label class="sr" for="input">Mensaje</label>
+    <input id="input" type="text" maxlength="500" placeholder="gasté 15mil en el taxi" autofocus>
+    <button type="submit" id="send">Anotar</button>
+  </form>
+</main>
+{% endblock %}
+{% block scripts %}{% load static %}<script src="{% static 'dashboard/js/chat.js' %}"></script>{% endblock %}

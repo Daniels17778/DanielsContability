@@ -1,0 +1,33 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Categorías{% endblock %}
+{% block content %}
+<main class="wrap">
+  <div class="page-head"><div><h1>Categorías</h1><p class="muted">Sirven para saber en qué gastas y de dónde viene tu dinero.</p></div></div>
+
+  <details class="add">
+    <summary>+ Nueva categoría</summary>
+    <form method="post" class="form">{% csrf_token %}<input type="hidden" name="action" value="create">
+      <div class="seg"><label><input type="radio" name="type" value="EXPENSE" checked><span>De gastos</span></label><label><input type="radio" name="type" value="INCOME"><span>De ingresos</span></label></div>
+      <div class="f2">
+        <div><label for="c-name">Nombre</label><input id="c-name" name="name" maxlength="100" placeholder="Ej: mascotas" required></div>
+        <div><label for="c-icon">Emoji <span class="muted">(opcional)</span></label><input id="c-icon" name="icon" maxlength="4" placeholder="🐶"></div>
+      </div>
+      <button class="btn-p" type="submit">Crear categoría</button>
+    </form>
+  </details>
+
+  <div class="grid">
+    <div>
+      <h2>Gastos</h2>
+      {% for c in expense %}{% include "dashboard/_category_item.html" %}{% empty %}<p class="empty">Sin categorías de gastos.</p>{% endfor %}
+    </div>
+    <div>
+      <h2>Ingresos</h2>
+      {% for c in income %}{% include "dashboard/_category_item.html" %}{% empty %}<p class="empty">Sin categorías de ingresos.</p>{% endfor %}
+      {% if archived %}<h2 style="margin-top:36px">Archivadas</h2>
+      {% for c in archived %}<div class="item flat"><span>{{ c.icon }} {{ c.name }}<small>{{ c.get_type_display }}</small></span>
+        <form method="post">{% csrf_token %}<input type="hidden" name="action" value="toggle"><input type="hidden" name="id" value="{{ c.id }}"><button class="btn-g" type="submit">Reactivar</button></form></div>{% endfor %}{% endif %}
+    </div>
+  </div>
+</main>
+{% endblock %}

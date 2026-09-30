@@ -1,0 +1,77 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Movimientos{% endblock %}
+{% block content %}
+<main class="wrap">
+  <div class="page-head"><div><h1>Movimientos</h1><p class="muted">Todo lo que entra y sale de tus cuentas.</p></div></div>
+
+  {% if not accounts %}
+    <p class="notice">Antes de anotar movimientos necesitas una cuenta. <a href="{% url 'dashboard:accounts' %}">Crear mi primera cuenta →</a></p>
+  {% else %}
+  <details class="add" id="nuevo" {% if open_new %}open{% endif %}>
+    <summary>+ Nuevo movimiento</summary>
+    <form method="post" class="form" id="tx-form">{% csrf_token %}
+      <input type="hidden" name="action" value="create">
+      <div class="seg" role="radiogroup" aria-label="Tipo">
+        <label><input type="radio" name="type" value="EXPENSE" checked><span>Gasto</span></label>
+        <label><input type="radio" name="type" value="INCOME"><span>Ingreso</span></label>
+        <label><input type="radio" name="type" value="TRANSFER"><span>Transferencia</span></label>
+      </div>
+      <div class="f2">
+        <div><label for="tx-amount">Monto</label><input id="tx-amount" name="amount" data-money inputmode="numeric" placeholder="15.000" required></div>
+        <div><label for="tx-date">Fecha</label><input id="tx-date" type="date" name="date" value="{{ today|date:'Y-m-d' }}"></div>
+      </div>
+      <div class="f2">
+        <div><label for="tx-account"><span id="lbl-account">Cuenta</span></label>
+          <select id="tx-account" name="account" required>{% for a in accounts %}<option value="{{ a.id }}">{{ a.name }} · ${{ a.balance|floatformat:"0g" }}</option>{% endfor %}</select></div>
+        <div id="box-cat"><label for="tx-cat">Categoría</label>
+          <select id="tx-cat" name="category">{% for c in categories %}<option value="{{ c.id }}" data-type="{{ c.type }}">{{ c.icon }} {{ c.name }}</option>{% endfor %}</select></div>
+        <div id="box-dest" hidden><label for="tx-dest">Cuenta destino</label>
+          <select id="tx-dest" name="transfer_account">{% for a in accounts %}<option value="{{ a.id }}">{{ a.name }}</option>{% endfor %}</select></div>
+      </div>
+      <label for="tx-note">Nota <span class="muted">(opcional)</span></label>
+      <input id="tx-note" name="description" maxlength="255" placeholder="Ej: almuerzo con Juan">
+      <button class="btn-p" type="submit">Guardar movimiento</button>
+    </form>
+  </details>
+  {% endif %}
+
+  <form class="filters" method="get">
+    <div class="months">
+      <a href="?mes={{ prev }}&tipo={{ kind }}&cuenta={{ acc }}" aria-label="Mes anterior">←</a>
+      <strong>{{ month_date|date:"F Y" }}</strong>
+      <a href="?mes={{ next }}&tipo={{ kind }}&cuenta={{ acc }}" aria-label="Mes siguiente">→</a>
+    </div>
+    <input type="hidden" name="mes" value="{{ mes }}">
+    <select name="tipo" data-autosubmit aria-label="Tipo"><option value="">Todos</option><option value="EXPENSE"{% if kind == 'EXPENSE' %} selected{% endif %}>Gastos</option><option value="INCOME"{% if kind == 'INCOME' %} selected{% endif %}>Ingresos</option><option value="TRANSFER"{% if kind == 'TRANSFER' %} selected{% endif %}>Transferencias</option></select>
+    <select name="cuenta" data-autosubmit aria-label="Cuenta"><option value="">Todas las cuentas</option>{% for a in accounts %}<option value="{{ a.id }}"{% if acc == a.id|stringformat:"s" %} selected{% endif %}>{{ a.name }}</option>{% endfor %}</select>
+  </form>
+
+  <div class="stats">
+    <div class="stat"><span class="muted">Entró</span><span class="num">+${{ income|floatformat:"0g" }}</span></div>
+    <div class="stat"><span class="muted">Salió</span><span class="num">−${{ expenses|floatformat:"0g" }}</span></div>
+    <div class="stat"><span class="muted">Diferencia</span><span class="num">{% if net < 0 %}−{% endif %}${{ net|floatformat:"0g" }}</span></div>
+  </div>
+
+  {% regroup rows by date as days %}
+  {% for day in days %}
+    <h2 class="day">{{ day.grouper|date:"l j \d\e F" }}</h2>
+    {% for tx in day.list %}
+    <details class="item">
+      <summary>
+        <span>{% if tx.description %}{{ tx.description|truncatechars:48 }}{% elif tx.category %}{{ tx.category.name }}{% else %}Transferencia{% endif %}
+          <small>{% if tx.type == 'TRANSFER' %}{{ tx.account.name }} → {{ tx.transfer_account.name|default:"—" }}{% else %}{{ tx.category.name|default:"Sin categoría" }} · {{ tx.account.name }}{% endif %}</small></span>
+        <span class="num">{% if tx.type == 'INCOME' %}+{% elif tx.type == 'EXPENSE' %}−{% endif %}${{ tx.amount|floatformat:"0g" }}</span>
+      </summary>
+      <div class="edit">
+        <form method="post" data-confirm="¿Eliminar este movimiento? El saldo de la cuenta se ajustará.">{% csrf_token %}
+          <input type="hidden" name="action" value="delete"><input type="hidden" name="id" value="{{ tx.id }}">
+          <button class="btn-d" type="submit">Eliminar movimiento</button>
+        </form>
+      </div>
+    </details>
+    {% endfor %}
+  {% empty %}
+    <p class="empty">No hay movimientos en {{ month_date|date:"F" }}{% if kind or acc %} con esos filtros{% endif %}.</p>
+  {% endfor %}
+</main>
+{% endblock %}
