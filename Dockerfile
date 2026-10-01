@@ -17,7 +17,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-RUN python manage.py collectstatic --noinput || true
+RUN DJANGO_DEBUG=False DJANGO_SECRET_KEY=build-key python manage.py collectstatic --noinput
 
 EXPOSE 8000
 
