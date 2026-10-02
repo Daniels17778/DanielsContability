@@ -103,3 +103,30 @@ class ConversationMessage(models.Model):
 
     def __str__(self):
         return f"{self.role}: {self.content[:50]}"
+
+
+class PushSubscription(models.Model):
+    """Una suscripción a notificaciones push del navegador.
+
+    `endpoint` identifica de forma única la suscripción de un navegador
+    concreto (el navegador la genera al llamar pushManager.subscribe()).
+    Un mismo usuario puede tener varias si instaló la app en más de un
+    celular/navegador.
+    """
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="push_subscriptions",
+        db_index=True,
+    )
+
+    endpoint = models.URLField(max_length=500, unique=True)
+    p256dh = models.CharField(max_length=255)
+    auth = models.CharField(max_length=255)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_used_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.endpoint[:40]}..."

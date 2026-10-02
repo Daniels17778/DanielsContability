@@ -18,12 +18,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 
-from django.contrib import admin
-from django.urls import include, path
+from bot.views import service_worker
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("accounts/", include("django.contrib.auth.urls")),
+    path("sw.js", service_worker, name="service_worker"),
     path("", include("dashboard.urls")),
     path("bot/", include("bot.urls")),
 ]

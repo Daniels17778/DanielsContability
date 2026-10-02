@@ -158,6 +158,23 @@ MEDIA_ROOT = BASE_DIR / "media"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
+# ── Notificaciones push ──────────────────────────────────────
+#
+# VAPID_PRIVATE_KEY / VAPID_PUBLIC_KEY: par de llaves que identifican
+# tu servidor ante los navegadores. Se generan una sola vez; si las
+# cambias, todas las suscripciones existentes dejan de servir y cada
+# usuario tiene que volver a activar las notificaciones.
+#
+# REMINDER_TOKEN: contraseña compartida que solo conocen tu servidor
+# y el cron externo que dispara los recordatorios. Sin ella, cualquiera
+# podría mandar notificaciones push a tus usuarios golpeando la URL.
+
+VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY", "")
+VAPID_PUBLIC_KEY = os.environ.get("VAPID_PUBLIC_KEY", "")
+VAPID_CLAIMS_EMAIL = os.environ.get("VAPID_CLAIMS_EMAIL", "mailto:admin@example.com")
+REMINDER_TOKEN = os.environ.get("REMINDER_TOKEN", "")
+
+
 # ── Login / Logout ────────────────────────────────────────────
 
 LOGIN_URL = "login"

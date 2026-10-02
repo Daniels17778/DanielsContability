@@ -19,12 +19,22 @@
     <a href="{% url 'dashboard:plans' %}"{% if request.resolver_match.url_name == 'plans' %} aria-current="page"{% endif %}>Planes</a>
     <a href="{% url 'dashboard:chat' %}"{% if request.resolver_match.url_name == 'chat' %} aria-current="page"{% endif %}>Libreta</a>
   </nav>
+  <button
+    type="button"
+    class="link"
+    id="push-toggle"
+    hidden
+    data-public-key-url="{% url 'bot:push_public_key' %}"
+    data-subscribe-url="{% url 'bot:push_subscribe' %}"
+    data-unsubscribe-url="{% url 'bot:push_unsubscribe' %}"
+  >Activar avisos</button>
   <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="link">Salir</button></form>
 </header>
 {% endif %}
 {% if messages %}<div class="flash-wrap">{% for m in messages %}<p class="flash {{ m.tags }}" role="status">{{ m }}</p>{% endfor %}</div>{% endif %}
 {% block content %}{% endblock %}
 {% load static %}<script src="{% static 'dashboard/js/panel.js' %}"></script>
+{% if request.user.is_authenticated %}<script src="{% static 'dashboard/js/push.js' %}"></script>{% endif %}
 {% block scripts %}{% endblock %}
 </body>
 </html>
