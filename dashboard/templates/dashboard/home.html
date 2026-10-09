@@ -4,6 +4,21 @@
   <div class="hero">
     <p class="eyebrow">{{ today|date:"l j \d\e F" }} · Saldo total</p>
     <span class="big num">${{ total_balance|floatformat:"0g" }}</span>
+
+    {% if accounts %}
+    <div class="accts" aria-label="Saldo por cuenta">
+      {% for a in accounts %}
+      <a class="acct" href="{% url 'dashboard:transactions' %}?cuenta={{ a.id }}">
+        <span>{{ a.name }}<small>{{ a.get_account_type_display }}</small></span>
+        <span class="num">${{ a.balance|floatformat:"0g" }}</span>
+      </a>
+      {% endfor %}
+    </div>
+    <p class="accts-note"><a href="{% url 'dashboard:accounts' %}">Gestionar cuentas</a></p>
+    {% else %}
+    <p class="empty" style="margin-top:14px">Crea tu primera cuenta en <a href="{% url 'dashboard:accounts' %}">administración</a>.</p>
+    {% endif %}
+
     <p style="margin-top:18px"><a class="btn-p" style="display:inline-block;text-decoration:none;margin:0" href="{% url 'dashboard:transactions' %}?nuevo=1#nuevo">+ Nuevo movimiento</a></p>
   </div>
 
@@ -39,13 +54,6 @@
     </div>
 
     <div>
-      <section>
-        <h2>Cuentas <a href="{% url 'dashboard:accounts' %}">Gestionar</a></h2>
-        {% for a in accounts %}
-        <div class="row"><span>{{ a.name }}<small>{{ a.get_account_type_display }}</small></span><span class="num">${{ a.balance|floatformat:"0g" }}</span></div>
-        {% empty %}<p class="empty">Crea tu primera cuenta en <a href="{% url 'dashboard:accounts' %}">administración</a>.</p>{% endfor %}
-      </section>
-
       {% if savings_goals %}
       <section>
         <h2>Metas de ahorro <a href="{% url 'dashboard:plans' %}">Ver planes</a></h2>

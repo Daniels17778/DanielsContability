@@ -98,3 +98,14 @@ h2.day{margin:30px 0 4px;text-transform:capitalize;letter-spacing:.02em}
 .edit form.inline{display:flex;gap:10px;align-items:flex-start}.edit form.inline input{flex:1}.edit form.inline .btn-p{margin-top:0;white-space:nowrap}
 .edit p{margin-bottom:10px}
 @media(max-width:760px){.f2{grid-template-columns:1fr}.top nav{gap:14px;overflow-x:auto;white-space:nowrap}.top{flex-wrap:wrap;gap:10px 16px}.top nav{order:3;flex-basis:100%}}
+
+/* Saldo por cuenta bajo el total del resumen */
+.accts{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-top:22px}
+.acct{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:12px 14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);text-decoration:none}
+.acct:hover{border-color:var(--ink)}.acct small{display:block;color:var(--muted);font-size:13px}
+.acct .num{white-space:nowrap}
+.accts-note{margin-top:10px;font-size:13px}.accts-note a{color:var(--muted)}.accts-note a:hover{color:var(--ink)}
+
+/* Filtros que se aplican sin recargar */
+.filters select[hidden]{display:none}
+.results{transition:opacity .15s}.results.loading{opacity:.45;pointer-events:none}

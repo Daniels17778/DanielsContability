@@ -122,13 +122,21 @@ def transactions(request):
     ensure_default_categories(user)
     y, m = _month(request.GET.get("mes"))
     kind = request.GET.get("tipo", "")
+    if kind not in ("EXPENSE", "INCOME", "TRANSFER"):
+        kind = ""
     acc = request.GET.get("cuenta", "")
+    cat = request.GET.get("categoria", "")
+    # Las transferencias no tienen categoría: con ese tipo el filtro no aplica.
+    if kind == "TRANSFER" or not cat.isdigit():
+        cat = ""
 
     qs = Transaction.objects.filter(user=user, date__year=y, date__month=m)
-    if kind in ("EXPENSE", "INCOME", "TRANSFER"):
+    if kind:
         qs = qs.filter(type=kind)
     if acc.isdigit():
         qs = qs.filter(Q(account_id=acc) | Q(transfer_account_id=acc))
+    if cat:
+        qs = qs.filter(category_id=cat, category__user=user)
     total = lambda t: qs.filter(type=t).aggregate(s=Sum("amount"))["s"] or 0
     income, expenses = total("INCOME"), total("EXPENSE")
 
@@ -136,12 +144,15 @@ def transactions(request):
     next_y, next_m = (y + 1, 1) if m == 12 else (y, m + 1)
     return render(request, "dashboard/transactions.html", {
         "rows": qs.select_related("account", "category", "transfer_account").order_by("-date", "-created_at")[:300],
-        "income": income, "expenses": expenses, "net": income - expenses,
+        "income": income, "expenses": expenses, "net": income - expenses, "net_abs": abs(income - expenses),
         "month_date": date(y, m, 1),
         "mes": f"{y}-{m:02d}", "prev": f"{prev_y}-{prev_m:02d}", "next": f"{next_y}-{next_m:02d}",
-        "kind": kind, "acc": acc,
+        "kind": kind, "acc": acc, "cat": cat,
         "accounts": Account.objects.filter(user=user, is_active=True).order_by("name"),
         "categories": Category.objects.filter(user=user, is_active=True).order_by("type", "name"),
+        # Para filtrar también entran las archivadas: pueden tener movimientos viejos.
+        "filter_expense": Category.objects.filter(user=user, type="EXPENSE").order_by("name"),
+        "filter_income": Category.objects.filter(user=user, type="INCOME").order_by("name"),
         "today": timezone.localdate(),
         "open_new": bool(request.GET.get("nuevo")),
     })

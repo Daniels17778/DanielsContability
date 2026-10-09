@@ -120,3 +120,38 @@ class PanelTests(TestCase):
         self.assertContains(r, "$1.000")
         r = self.client.get(reverse("dashboard:transactions") + "?mes=basura")
         self.assertEqual(r.status_code, 200)
+
+    def test_filter_by_category_within_month(self):
+        trans = Category.objects.create(user=self.u, name="transporte", type="EXPENSE")
+        self.post("transactions", action="create", type="EXPENSE", amount="10000", account=self.a.id, category=self.food.id, date="2026-09-03", description="almuerzo")
+        self.post("transactions", action="create", type="EXPENSE", amount="4000", account=self.a.id, category=trans.id, date="2026-09-04", description="bus")
+        self.post("transactions", action="create", type="EXPENSE", amount="7000", account=self.a.id, category=self.food.id, date="2026-08-20", description="cena agosto")
+        url = reverse("dashboard:transactions")
+
+        r = self.client.get(f"{url}?mes=2026-09&categoria={self.food.id}")
+        self.assertContains(r, "almuerzo")
+        self.assertNotContains(r, "bus")
+        self.assertNotContains(r, "cena agosto")
+        self.assertEqual(r.context["expenses"], 10000)
+
+        r = self.client.get(f"{url}?mes=2026-09")
+        self.assertContains(r, "almuerzo")
+        self.assertContains(r, "bus")
+
+    def test_category_filter_ignores_other_users_and_transfers(self):
+        theirs = Category.objects.create(user=self.other, name="ajena", type="EXPENSE")
+        url = reverse("dashboard:transactions")
+        self.post("transactions", action="create", type="EXPENSE", amount="1000", account=self.a.id, category=self.food.id, date="2026-09-03")
+        r = self.client.get(f"{url}?mes=2026-09&categoria={theirs.id}")
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(len(r.context["rows"]), 0)
+        self.post("transactions", action="create", type="TRANSFER", amount="500", account=self.a.id, transfer_account=self.b.id, date="2026-09-05")
+        r = self.client.get(f"{url}?mes=2026-09&tipo=TRANSFER&categoria={self.food.id}")
+        self.assertEqual(len(r.context["rows"]), 1)
+
+    def test_home_shows_each_account_balance(self):
+        r = self.client.get(reverse("dashboard:home"))
+        self.assertContains(r, 'class="acct"', count=2)
+        self.assertContains(r, "Nequi")
+        self.assertContains(r, "Efectivo")
+        self.assertContains(r, "$100.000")

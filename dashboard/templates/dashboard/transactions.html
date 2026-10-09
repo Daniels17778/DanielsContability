@@ -35,21 +35,27 @@
   </details>
   {% endif %}
 
-  <form class="filters" method="get">
-    <div class="months">
-      <a href="?mes={{ prev }}&tipo={{ kind }}&cuenta={{ acc }}" aria-label="Mes anterior">←</a>
+  <form class="filters" method="get" id="filters">
+    <div class="months" id="months">
+      <a href="?mes={{ prev }}&tipo={{ kind }}&cuenta={{ acc }}&categoria={{ cat }}" aria-label="Mes anterior" data-nav>←</a>
       <strong>{{ month_date|date:"F Y" }}</strong>
-      <a href="?mes={{ next }}&tipo={{ kind }}&cuenta={{ acc }}" aria-label="Mes siguiente">→</a>
+      <a href="?mes={{ next }}&tipo={{ kind }}&cuenta={{ acc }}&categoria={{ cat }}" aria-label="Mes siguiente" data-nav>→</a>
+      <input type="hidden" name="mes" value="{{ mes }}">
     </div>
-    <input type="hidden" name="mes" value="{{ mes }}">
     <select name="tipo" data-autosubmit aria-label="Tipo"><option value="">Todos</option><option value="EXPENSE"{% if kind == 'EXPENSE' %} selected{% endif %}>Gastos</option><option value="INCOME"{% if kind == 'INCOME' %} selected{% endif %}>Ingresos</option><option value="TRANSFER"{% if kind == 'TRANSFER' %} selected{% endif %}>Transferencias</option></select>
+    <select name="categoria" id="f-cat" data-autosubmit aria-label="Categoría"{% if kind == 'TRANSFER' %} hidden{% endif %}>
+      <option value="">Todas las categorías</option>
+      <optgroup label="Gastos" data-type="EXPENSE">{% for c in filter_expense %}<option value="{{ c.id }}"{% if cat == c.id|stringformat:"s" %} selected{% endif %}>{{ c.icon }} {{ c.name }}{% if not c.is_active %} (archivada){% endif %}</option>{% endfor %}</optgroup>
+      <optgroup label="Ingresos" data-type="INCOME">{% for c in filter_income %}<option value="{{ c.id }}"{% if cat == c.id|stringformat:"s" %} selected{% endif %}>{{ c.icon }} {{ c.name }}{% if not c.is_active %} (archivada){% endif %}</option>{% endfor %}</optgroup>
+    </select>
     <select name="cuenta" data-autosubmit aria-label="Cuenta"><option value="">Todas las cuentas</option>{% for a in accounts %}<option value="{{ a.id }}"{% if acc == a.id|stringformat:"s" %} selected{% endif %}>{{ a.name }}</option>{% endfor %}</select>
   </form>
 
+  <div class="results" id="results">
   <div class="stats">
     <div class="stat"><span class="muted">Entró</span><span class="num">+${{ income|floatformat:"0g" }}</span></div>
     <div class="stat"><span class="muted">Salió</span><span class="num">−${{ expenses|floatformat:"0g" }}</span></div>
-    <div class="stat"><span class="muted">Diferencia</span><span class="num">{% if net < 0 %}−{% endif %}${{ net|floatformat:"0g" }}</span></div>
+    <div class="stat"><span class="muted">Diferencia</span><span class="num">{% if net < 0 %}−{% endif %}${{ net_abs|floatformat:"0g" }}</span></div>
   </div>
 
   {% regroup rows by date as days %}
@@ -71,7 +77,8 @@
     </details>
     {% endfor %}
   {% empty %}
-    <p class="empty">No hay movimientos en {{ month_date|date:"F" }}{% if kind or acc %} con esos filtros{% endif %}.</p>
+    <p class="empty">No hay movimientos en {{ month_date|date:"F" }}{% if kind or acc or cat %} con esos filtros{% endif %}.</p>
   {% endfor %}
+  </div>
 </main>
 {% endblock %}
